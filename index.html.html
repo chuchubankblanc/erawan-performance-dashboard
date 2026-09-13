@@ -743,7 +743,80 @@ document.getElementById('imp').onchange=e=>{
   render();
   bootRemote();
 })();
+/* ===== ระบบ Logo จุดจอด (ดึงจาก GitHub) ===== */
 
+const LOGO_BASE =
+  'https://raw.githubusercontent.com/chuchubankblanc/erawan-performance-dashboard/main/logos/';
+
+const STATION_SLUG = {
+  "จุดจอดบางนา":            "bangna",
+  "จุดจอดตลิ่งชัน":          "talingchan",
+  "จุดจอดลาดพร้าว":         "ladprao",
+  "จุดจอดวังทองหลาง":       "wangthonglang",
+  "จุดจอดรามอินทรา":        "ramintra",
+  "จุดจอดบางขุนเทียน":      "bangkhunthian",
+  "จุดจอดบางบอน":           "bangbon",
+  "จุดจอด ศบฉ.":            "sbc",
+  "จุดจอดลาดยาว":           "ladyao",
+  "จุดจอดวัดวิมุตยาราม":     "watwimut",
+  "จุดจอดทุ่งครุ":           "thungkhru",
+  "จุดจอดประชานิเวศน์":     "prachanivet",
+  "จุดจอดบางซื่อ":          "bangsue",
+  "จุดจอดดินแดง":           "dindaeng",
+  "จุดจอดบึงกุ่ม":           "buengkum",
+  "จุดจอดบางชัน":           "bangchan",
+  "จุดจอดสะพานสูง":        "saphansung",
+  "จุดจอดบึงหนองบอน":      "buengnongbon",
+  "จุดจอดคลองสามวา":       "khlongsamwa",
+  "จุดจอดมีนบุรี":           "minburi",
+  "จุดจอดจรัญสนิทวงศ์":     "charansanitwong",
+  "จุดจอดอุโมงค์หน้าพระลาน": "naphralan"
+};
+
+const DEFAULT_LOGO = LOGO_BASE + 'default.png';
+
+/* คืน URL ของ logo — ถ้าไม่มีใน mapping จะได้ null */
+function getLogoUrl(stationName) {
+  const slug = STATION_SLUG[stationName];
+  return slug ? LOGO_BASE + slug + '.png' : null;
+}
+
+/*
+  สร้าง element โลโก้ ลำดับการตกชั้น 3 ระดับ:
+  1. รูปเฉพาะของจุดจอดนั้น (เช่น bangna.png)
+  2. ถ้าไม่มี  -> default.png
+  3. ถ้ายังไม่มีอีก -> ตัวอักษรย่อ 2 ตัว (กันตารางพัง)
+*/
+function makeLogoEl(stationName) {
+  const shortName = String(stationName).replace(/^จุดจอด\s*/, '');
+  const label = shortName.slice(0, 2) || '?';
+
+  const textFallback = document.createElement('span');
+  textFallback.className = 'logo-fallback';
+  textFallback.textContent = label;
+  textFallback.title = stationName;
+
+  const img = document.createElement('img');
+  img.className = 'station-logo';
+  img.alt = stationName;
+  img.title = stationName;
+  img.loading = 'lazy';
+
+  const own = getLogoUrl(stationName);
+  let stage = own ? 'own' : 'default';
+  img.src = own || DEFAULT_LOGO;
+
+  img.onerror = () => {
+    if (stage === 'own') {
+      stage = 'default';
+      img.src = DEFAULT_LOGO;     // ลองรูปกลางก่อน
+    } else {
+      img.replaceWith(textFallback); // ด่านสุดท้าย
+    }
+  };
+
+  return img;
+}
 </script>
 </body>
 </html>
